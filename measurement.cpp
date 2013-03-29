@@ -159,12 +159,12 @@ public:
     }
 
     virtual void _perCellHeader() {
-        *_cstream << "lenSPhase\treplicatorIndex\tdnaIndex";
+        *_cstream << "lenSPhase\treplicatorIndex\tdnaIndex\tnInitiation";
     }
 
     virtual void _perCellOutput(unsigned int i) {
         CELL_STREAM() <<  cells()[i].lenSPhase() << "\t" << cells()[i].replicatorIndex() << "\t" <<
-        cells()[i].dnaIndex();
+        cells()[i].dnaIndex() << "\t" << cells()[i].nInitiation();
     }
 };
 
@@ -426,7 +426,8 @@ public:
 protected:
     friend vector<double> &cghNcutoff();
     friend void initDefaultCghNCutoff();
-    static const int _NTIMEPOINTS = 5;
+//    static const int _NTIMEPOINTS = 5;
+    static const int _NTIMEPOINTS = 6;
     vector<long int> _T[_NTIMEPOINTS], _CELLFRACTION;
     static vector<long int>  _GT[_NTIMEPOINTS], _GCELLFRACTION;
     static std::ostream *_simstream;

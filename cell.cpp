@@ -60,7 +60,7 @@ unsigned int cell::chromosomeLength ( unsigned int chr )
 }
 
 cell::cell ( threadVariables &t ) : threadVariablesClient ( t ), 
-              _replicator ( _nreplicator, replicator ( t ) ), _g2 ( true ), _lenSPhase ( 0 )
+              _replicator ( _nreplicator, replicator ( t ) ), _g2 ( true ), _lenSPhase ( 0 ), _curNInitiation(0)
 {
 
 
@@ -125,6 +125,7 @@ void cell::timeStep()
 		if ( ( !d.isReplicated ( l ) ) && ( ran() <= pInitiate ( c ) [l] ) )
 		{
 			d.replicate ( l, _curSPhase );
+			++_curNInitiation;
 //			bool o = ( ran() >= 0.5 ); // Turn this one if you want to allow uni-directional replicators
 			const bool o = true;
 			_idleRep[cur++]->initiate ( d,l,o );
@@ -169,6 +170,7 @@ void cell::enterSPhase()
 	for ( unsigned int d=0; d < nChromosomes(); d++ ) _dna[d].enterSPhase();
 	_g2 = false;
 	_curSPhase = 0;
+	_curNInitiation = 0;
 	return;
 }
 
@@ -180,6 +182,7 @@ void cell::enterG2Phase()
 {
 	_g2 = true;
 	_lenSPhase = _curSPhase;
+	_nInitiation = _curNInitiation;
 #ifdef MEASURE_REPLICATION_TIMING
 	for ( unsigned int i=0; i < nChromosomes(); i++ )
 	{

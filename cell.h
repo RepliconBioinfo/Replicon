@@ -67,7 +67,8 @@ class cell : protected threadVariablesClient
 		unsigned int nFragment() const;
 		const dna::fragment &nacentDna ( int ) const;
 		dna &chromosome ( int i ) const { return _dna[i]; }
-		unsigned int lenSPhase() const { return _lenSPhase; }
+		int lenSPhase() { int  tmp =  _lenSPhase; _lenSPhase = -1; return tmp; }
+		int nInitiation()  { int tmp = _nInitiation; _nInitiation = -1; return tmp; }
 
 	protected:
 		mutable vector<dna> _dna;
@@ -83,7 +84,8 @@ class cell : protected threadVariablesClient
 
 	private:
 		bool _g2;
-		unsigned int _curSPhase, _lenSPhase;
+		int _curSPhase, _lenSPhase, _curNInitiation, _nInitiation;
+
 		vector<replicator *> _idleRep;
 #ifdef MEASURE_REPLICATION_TIMING
 	public:
