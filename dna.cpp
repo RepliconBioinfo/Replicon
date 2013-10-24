@@ -21,16 +21,19 @@
 #include "dna.h"
 #include "cell.h"
 dna::dna ( int c ) :  _length ( cell::chromosomeLength ( c ) ), 
-                      _replicated ( 0 ), _id ( c ), _fragDirty (false ), _nfrag ( 0 )
+                      _replicated ( 0 ),
+                      _id ( c ),
+                      _fragDirty (false ),
+                      _nfrag ( 0 )
 {
 	_dnaCopyNumber.resize ( length() );
+
 #ifdef MEASURE_REPLICATION_TIMING
-	_replicationTime[0].resize ( length() );
-	_replicationTime[1].resize ( length() );
-	_timer = true;
-	std::fill ( _replicationTime[1].begin(), _replicationTime[1].end(), 0 );
-	std::fill ( _replicationTime[0].begin(), _replicationTime[0].end(), 0 );
-	#endif
+	_replicationTime.resize ( length() );
+	_initiationTime.resize ( length() );
+	std::fill ( _replicationTime.begin(), _replicationTime.end(), 0 );
+	std::fill ( _initiationTime.begin(), _initiationTime.end(), 0 );
+#endif
 }
 
 dna::~dna()
@@ -40,8 +43,8 @@ void dna::enterSPhase()
 {
 	std::fill ( _dnaCopyNumber.begin(), _dnaCopyNumber.end(), false );
 #ifdef MEASURE_REPLICATION_TIMING
-	_timer = !_timer;  // use alternate timer
-	std::fill ( _replicationTime[_timer ? 1 : 0].begin(), _replicationTime[_timer ? 1 : 0].end(), 0 );
+	std::fill ( _replicationTime.begin(), _replicationTime.end(), 0 );
+	std::fill ( _initiationTime.begin(), _initiationTime.end(), -1 );
 #endif
 	_fragDirty = false;
 	_fragCache.clear();

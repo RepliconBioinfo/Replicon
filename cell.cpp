@@ -25,6 +25,7 @@
 float cell::_penters = 0.01;
 unsigned int    cell::_nchromosomes = 1;
 unsigned int    cell::_nreplicator  = 100;
+size_t cell::nInitiationRateBins = 5000;
 float cell::_induceAttempt = 5;
 cell::pTableSetType cell::_pinitiate;
 cell::pTableSetType cell::_pprogress;
@@ -59,11 +60,10 @@ unsigned int cell::chromosomeLength ( unsigned int chr )
 	return pInitiate ( chr ).size();
 }
 
+
 cell::cell ( threadVariables &t ) : threadVariablesClient ( t ), 
-              _replicator ( _nreplicator, replicator ( t ) ), _g2 ( true ), _lenSPhase ( 0 ), _curNInitiation(0)
+      _replicator ( _nreplicator, replicator ( t ) ), _g2 ( true ), _lenSPhase ( 0 ), _curNInitiation(0)
 {
-
-
 	for ( unsigned int c=0; c < nChromosomes(); c++ )
 	{
 		_dna.push_back ( dna ( c ) );
@@ -72,13 +72,17 @@ cell::cell ( threadVariables &t ) : threadVariablesClient ( t ),
 #ifdef MEASURE_REPLICATION_TIMING
 	const unsigned int n = nChromosomes();
 	_replicationTime.resize ( n );
+	_initiationTime.resize ( n );
 	for ( unsigned int c=0; c < n; c++ )
 	{
 		replicationTime ( c ).resize ( chromosomeLength ( c ) );
 		std::fill ( replicationTime ( c ).begin(), replicationTime ( c ).end(), 0 );
+		initiationTime ( c ).resize ( chromosomeLength ( c ) );
+		std::fill (initiationTime ( c ).begin(), initiationTime ( c ).end(), 0 );
 	}
+	_initiationRate.resize(nInitiationRateBins);
+	std::fill(_initiationRate.begin(), _initiationRate.end(), 0);
 #endif
-
 	_idleRep.resize ( nReplicator() );
 	return;
 }
@@ -125,10 +129,14 @@ void cell::timeStep()
 		if ( ( !d.isReplicated ( l ) ) && ( ran() <= pInitiate ( c ) [l] ) )
 		{
 			d.replicate ( l, _curSPhase );
+#ifdef MEASURE_REPLICATION_TIMING
+			d.initiationEvent(l, _curSPhase );
+#endif
 			++_curNInitiation;
 //			bool o = ( ran() >= 0.5 ); // Turn this one if you want to allow uni-directional replicators
 			const bool o = true;
 			_idleRep[cur++]->initiate ( d,l,o );
+
 			if ( cur >= idle ) break;
 			_idleRep[cur++]->initiate ( d,l,!o );
 		}
@@ -187,12 +195,19 @@ void cell::enterG2Phase()
 	for ( unsigned int i=0; i < nChromosomes(); i++ )
 	{
 		_replicationTime[i] = chromosome ( i ).replicationTime();
+		_initiationTime[i]  = chromosome ( i ).initiationTime();
+
+		for(size_t j=0; j < _initiationTime[i].size(); ++j) {
+			double t = _initiationTime[i][j];
+			if(t<0) continue;
+			size_t idx = t / _lenSPhase * nInitiationRateBins;
+			if(idx == nInitiationRateBins) idx--; // this should actually never happen, just to be sure
+			_initiationRate[idx]++;
+		}
 	}
 #endif
 	return;
 }
-
-
 
 
 /*!

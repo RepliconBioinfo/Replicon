@@ -65,17 +65,8 @@ class _measureAPI;
 
 class measure : public measureAPI {
 public:   
-    typedef enum {INDICES, HYBRIDIZE, KINETIC, TIMING, CGHTIMING} builtin;
+    typedef enum {INDICES, HYBRIDIZE, KINETIC, TIMING, CGHTIMING, INITIATIONRATE} builtin;
     void enable(builtin B);
-
-	typedef struct {
-		double earlyStart;
-		double earlyEnd;
-		double lateStart;
-		double lateEnd;
-	} flowSortT;
-
-	static flowSortT flowsorter;
 
     measure(thread *t=0) : measureAPI(t), _prefix("output") {}
     void setResultPrefix(const char *p) {_prefix = p; }

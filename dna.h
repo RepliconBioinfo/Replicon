@@ -33,8 +33,7 @@ class dna
 {
 	public:
 //    typedef vector<double> doublev;
-		typedef struct { int begin, end, chromosome;}
-		fragment;
+		typedef struct { int begin, end, chromosome; } fragment;
 
 		dna ( int c );
 		~dna();
@@ -44,10 +43,12 @@ class dna
 		int    length()             const { return _length; }
 		int    replicated()         const { return _replicated; }
 		unsigned int nFragment()    const { if ( _fragDirty ) _createNacentList(); return _nfrag; }
-	const fragment &nacentDna ( int i )  const { if ( _fragDirty ) _createNacentList(); return _fragCache[i]; }
+		const fragment &nacentDna ( int i )  const { if ( _fragDirty ) _createNacentList(); return _fragCache[i]; }
 
 #ifdef MEASURE_REPLICATION_TIMING
-	const vector<unsigned int> &replicationTime() const  { return _replicationTime[_timer ? 0 : 1]; } ;
+	const vector<int> &replicationTime() const  		{ return _replicationTime; }
+	const vector<int> &initiationTime() const   		{ return _initiationTime; }
+	void initiationEvent(int pos, unsigned int t) 		{ _initiationTime[pos] = t; }
 #endif
 
 		void   replicate ( int l, unsigned int t )
@@ -56,7 +57,7 @@ class dna
 			_replicated++;
 			_fragDirty = true;
 #ifdef MEASURE_REPLICATION_TIMING
-			_replicationTime[_timer ? 0 : 1][l] = t;
+			_replicationTime[l] = t;
 #endif
 			return;
 		};
@@ -75,8 +76,7 @@ class dna
 		vector<bool>    _dnaCopyNumber;
 		mutable vector<fragment> _fragCache;
 #ifdef MEASURE_REPLICATION_TIMING
-		vector<unsigned int> _replicationTime[2];
-		bool _timer;
+		vector<int> _replicationTime, _initiationTime;
 #endif
 };
 

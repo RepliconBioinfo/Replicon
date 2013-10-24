@@ -20,7 +20,7 @@
 #include <assert.h>
 #include <string>
 #include <fstream>
-//#include <ostream>
+#include <numeric>
 #include "measurement.h"
 #include "centrifuge.h"
 #include "microarray.h"
@@ -30,13 +30,6 @@
 #include "thread.h"
 
 using std::string;
-//flow-not-mentioned
-//measure::flowSortT measure::flowsorter = { 0.05, 0.35, 0.55, 0.95 };
-//flow1
-//measure::flowSortT measure::flowsorter = { 0.05, 0.25, 0.65, 0.98 };
-//flow2
-measure::flowSortT measure::flowsorter = { 0.05, 0.50, 0.75, 0.98 };
-
 // provide some default implementations for IO streams. It is not published
 // in the .h file because it is very closely tight to the implementation of the
 // measure class.
@@ -89,6 +82,7 @@ protected:
 
 };
 
+//simulate the nacent-strand analysis used ba Valenzuela and Aladjem
 class hybridize : public _measureAPI {
 public:
     hybridize(thread *t) : _measureAPI(t), _Z ( *static_cast<threadVariables *>(t) ) {
@@ -144,6 +138,71 @@ public:
     static std::ostream *_simstream;
 };
 
+class initiationRate : public _measureAPI {
+public:
+    initiationRate(thread *t) : _measureAPI(t)  {}
+
+    virtual void measureNonBlocked(void *) {
+        const size_t n = cells().size();
+        for ( size_t i=0; i < n; i++ ) {
+        	cell::tTableType &rates = cells()[i].initiationRate();
+        	std::transform(rates.begin(), rates.end(), _rates.begin(), _rates.begin(), std::plus<int>());
+        }
+        return;
+    }
+
+    virtual void prepareMulti(void *) {
+    	_rates.resize(cell::nInitiationRateBins);
+    	std::fill(_rates.begin(), _rates.end(), 0);
+    }
+    virtual void prepareSingle(void *) {
+    	_Grates = new vector<double>(cell::nInitiationRateBins,0);
+    }
+
+    virtual void cleanupSingle(void *) {
+        delete _Grates;
+    }
+
+    virtual void finishMulti(void *) {
+       	std::transform(_rates.begin(), _rates.end(), _Grates->begin(), _Grates->begin(), std::plus<double>());
+    }
+
+
+    virtual void finishSingle(void *) {
+    	double total = std::accumulate(_Grates->begin(), _Grates->end(),  0.);
+    	std::transform(_Grates->begin(), _Grates->end(),  _Grates->begin(), std::bind2nd(std::divides<double>(), total));
+    }
+
+    measureAPI *clone(thread *t) {
+        _measureAPI *r=new initiationRate(t);
+        return r;
+    }
+
+
+    unsigned int outputType() {
+        return SIMULATION;
+    }
+
+    virtual void writeSimulationResults() {
+        SIMULATION_STREAM() << "#SPhase-Fraction\tFraction\n";
+        for(size_t i=0; i < _Grates->size(); ++i) {
+        	double t = (i + 0.5) / cell::nInitiationRateBins;
+        	SIMULATION_STREAM() << t << "\t" << (*_Grates)[i] << "\n";
+        }
+        return;
+    }
+
+    virtual std::string measFnam() { return "initiationRates"; }
+
+    virtual void setSimStream(std::ostream *s) { _simstream = s; }
+
+    virtual std::ostream &SIMULATION_STREAM()  { assert(_simstream); return (*_simstream); }
+
+  private:
+    cell::tTableType _rates;
+    static  vector<double>  *_Grates;
+    static std::ostream *_simstream;
+};
 
 class indices : public _measureAPI {
 public:
@@ -168,7 +227,7 @@ public:
     }
 };
 
-
+// direct measurement of replication timing / initiation timing data
 class timing : public _measureAPI {
 public:
     timing(thread *t) : _measureAPI(t) {}
@@ -177,11 +236,11 @@ public:
         return r;
     }
 
-
     virtual void measureNonBlocked(void *) {
         const unsigned int n = cells().size();
-        std::fill ( _t.begin(), _t.end(), 0. );
+        std::fill ( _t.begin(),  _t.end(),  0. );
         std::fill ( _t2.begin(), _t2.end(), 0. );
+
         for ( unsigned int i=0; i < n; i++ ) {
             for ( unsigned int j=0; j < cell::chromosomeLength ( 0 ); ++j ) {
                 double t =  static_cast<double> ( cells()[i].replicationTime ( 0 ) [j] );
@@ -193,13 +252,25 @@ public:
         std::transform ( _t.begin(), _t.end(), _t.begin(), std::bind2nd ( std::divides<double>(), nu ) );
         std::transform ( _t2.begin(), _t2.end(), _t2.begin(), std::bind2nd ( std::divides<double>(), nu ) );
         std::transform ( _t.begin(), _t.end(), _t2.begin(), _t2.begin(), mkVar() );
+
+        std::fill ( _i.begin(),  _i.end(),  0. );
+        std::fill ( _in.begin(), _in.end(), 0. );
+        for ( unsigned int i=0; i < n; i++ ) {
+             for ( unsigned int j=0; j < cell::chromosomeLength ( 0 ); ++j ) {
+                 double t =  cells()[i].initiationTime ( 0 ) [j];
+                 if(t < 0) continue;
+                 _i[j] += t;
+                 _in[j] += 1.;
+             }
+         }
         return;
     }
 
-
     virtual void measureBlocked(void *) {
-        std::transform ( _t.begin(), _t.end(), gt.begin(), gt.begin(), std::plus<double>() );
+        std::transform ( _t.begin(),  _t.end(),  gt.begin(),  gt.begin(),  std::plus<double>() );
         std::transform ( _t2.begin(), _t2.end(), gt2.begin(), gt2.begin(), std::plus<double>() );
+        std::transform ( _i.begin(),  _i.end(),  gi.begin(),  gi.begin(),  std::plus<double>() );
+        std::transform ( _in.begin(), _in.end(), gin.begin(), gin.begin(), std::plus<double>() );
         ++nMeas;
         return;
     }
@@ -207,14 +278,19 @@ public:
     virtual void prepareMulti(void *) {
         _t.resize ( cell::chromosomeLength ( 0 ) );
         _t2.resize ( cell::chromosomeLength ( 0 ) );
-    }
-
+        _i.resize ( cell::chromosomeLength ( 0 ) );
+        _in.resize ( cell::chromosomeLength ( 0 ) );
+     }
 
     virtual void prepareSingle(void *) {
         gt.resize ( cell::chromosomeLength ( 0 ) );
         gt2.resize ( cell::chromosomeLength ( 0 ) );
+        gi.resize ( cell::chromosomeLength ( 0 ) );
+        gin.resize ( cell::chromosomeLength ( 0 ) );
         std::fill ( gt.begin(), gt.end(), 0. );
         std::fill ( gt2.begin(), gt2.end(), 0. );
+        std::fill ( gi.begin(), gi.end(), 0. );
+        std::fill ( gin.begin(), gin.end(), 0. );
         nMeas = 0;
     }
 
@@ -222,6 +298,10 @@ public:
         double nu = static_cast<double>(nMeas);
         std::transform ( gt.begin(),  gt.end(),  gt.begin(),  std::bind2nd ( std::divides<double>(), nu) );
         std::transform ( gt2.begin(), gt2.end(), gt2.begin(), std::bind2nd ( std::divides<double>(), nu) );
+        for(size_t i=0; i < gi.size(); ++i) {
+        	if(gin[i])
+        		gi[i] /= gin[i];
+        }
     }
 
     virtual unsigned int outputType() {
@@ -230,9 +310,9 @@ public:
 
     virtual void writeSimulationResults() {
         const unsigned int N = cell::chromosomeLength ( 0 );
-        SIMULATION_STREAM() << "pos\tAvgT\tVarT" << std::endl;
+        SIMULATION_STREAM() << "pos\tAvgT\tVarT\tinitT" << std::endl;
         for (unsigned int i=0 ; i < N; ++i ) {
-            SIMULATION_STREAM() << i << "\t" << gt[i] << "\t" << gt2[i] << std::endl;
+            SIMULATION_STREAM() << i << "\t" << gt[i] << "\t" << gt2[i] << "\t" << gi[i] << std::endl;
         }
         return;
     }
@@ -248,89 +328,13 @@ struct mkVar : public std::binary_function<double, double, double> {
         }
     };
 
-    vector<double> _t, _t2;
-    static vector<double> gt, gt2;
+    vector<double> _t, _t2, _i, _in;
+    static vector<double> gt, gt2, gi, gin;
     static unsigned int nMeas;
     static std::ostream *_simstream; 
 };
 
-
-class cghTiming : public _measureAPI {
-public:
-	cghTiming(thread *t) : _measureAPI(t) {}
-    measureAPI *clone(thread *t) {
-        _measureAPI *r=new cghTiming(t);
-        return r;
-    }
-
-
-    virtual void measureNonBlocked(void *) {
-        const unsigned int N = cells().size();
-        std::fill ( _t1.begin(), _t1.end(), 0. );
-        std::fill ( _t2.begin(), _t2.end(), 0. );
-        for (unsigned int i=0; i < N; i++ ) {
-        	const double sIndex = cells()[i].dnaIndex();
-        	if(sIndex >= measure::flowsorter.earlyStart && sIndex <= measure::flowsorter.earlyEnd) {
-               	for ( unsigned int j=0; j < cell::chromosomeLength ( 0 ); ++j ) {
-                        if(cells()[i].chromosome(0).isReplicated(j)) ++_t1[j];
-                    }
-        	}
-        	if(sIndex >= measure::flowsorter.lateStart && sIndex <= measure::flowsorter.lateEnd) {
-               	for ( unsigned int j=0; j < cell::chromosomeLength ( 0 ); ++j ) {
-                        if(cells()[i].chromosome(0).isReplicated(j)) ++_t2[j];
-                    }
-        	}
-        }
-        return;
-    }
-
-
-    virtual void measureBlocked(void *) {
-        std::transform ( _t1.begin(), _t1.end(), _gt1.begin(), _gt1.begin(), std::plus<long int>() );
-        std::transform ( _t2.begin(), _t2.end(), _gt2.begin(), _gt2.begin(), std::plus<long int>() );
-        return;
-    }
-
-    virtual void prepareMulti(void *) {
-        _t1.resize ( cell::chromosomeLength ( 0 ) );
-        _t2.resize ( cell::chromosomeLength ( 0 ) );
-    }
-
-    virtual void prepareSingle(void *) {
-        _gt1.resize ( cell::chromosomeLength ( 0 ) );
-        _gt2.resize ( cell::chromosomeLength ( 0 ) );
-        std::fill ( _gt1.begin(), _gt1.end(), 0 );
-        std::fill ( _gt2.begin(), _gt2.end(), 0 );
-    }
-
-    virtual void finishSingle(void *) {}
-
-    virtual unsigned int outputType() {
-        return SIMULATION;
-    }
-
-    virtual void writeSimulationResults() {
-        const unsigned int N = cell::chromosomeLength ( 0 );
-        SIMULATION_STREAM() << "pos\tT1\tT2" << std::endl;
-        for (unsigned int i=0 ; i < N; ++i ) {
-            SIMULATION_STREAM() << i << "\t" << _gt1[i] << "\t" << _gt2[i] << "\n";
-        }
-        return;
-    }
-
-    virtual std::string measFnam() { return ("CGHtiming"); }
-    virtual void setSimStream(std::ostream *s) { _simstream = s; }
-    virtual std::ostream &SIMULATION_STREAM()  { assert(_simstream); return (*_simstream); }
-
-protected:
-    vector<long int> _t1, _t2;
-    static vector<long int>_gt1, _gt2;
-    static std::ostream *_simstream;
-};
-vector<long int> cghTiming::_gt1, cghTiming::_gt2;
-std::ostream *cghTiming::_simstream;
-
-
+// Simulate the method used by Gilbert and others to measure timing by "CGH" analysis
 class cghNTiming : public _measureAPI {
 public:
 	cghNTiming(thread *t) : _measureAPI(t) {}
@@ -433,9 +437,6 @@ protected:
     static std::ostream *_simstream;
     static vector<double> _cutoff;
 };
-vector<long int> cghNTiming::_GT[cghNTiming::_NTIMEPOINTS], cghNTiming::_GCELLFRACTION;
-vector<double>   cghNTiming::_cutoff;
-std::ostream *cghNTiming::_simstream;
 
 vector<double> &cghNcutoff() { return cghNTiming::_cutoff; }
 
@@ -449,7 +450,7 @@ void initDefaultCghNCutoff() {
 }
 
 
-
+// simulate single molecule measurements
 class kinetic : public _measureAPI {
 public:
     kinetic(thread *t) : _measureAPI(t) {}
@@ -641,6 +642,10 @@ void measure::enable(measure::builtin b) {
         _M.push_back(new cghNTiming(0));
         break;
 
+    case INITIATIONRATE:
+         _M.push_back(new initiationRate(0));
+         break;
+
     default:
         std::cerr << "Internal error in measure::enable";
         exit(-1);
@@ -656,10 +661,11 @@ measure::~measure() {
     return;
 }
 
-vector<double> timing::gt;
-vector<double> timing::gt2;
+vector<double> timing::gt, timing::gt2, timing::gi, timing::gin,cghNTiming::_cutoff;
+vector<double>  *initiationRate::_Grates;
+vector<long int> cghNTiming::_GT[cghNTiming::_NTIMEPOINTS], cghNTiming::_GCELLFRACTION;
 microArray *hybridize::_Garray;
 unsigned int timing::nMeas = 0;
 std::ofstream *_measureAPI::_cstream, *_measureAPI::_mstream;
-std::ostream  *hybridize::_simstream, *timing::_simstream;
+std::ostream  *hybridize::_simstream, *timing::_simstream, *initiationRate::_simstream, *cghNTiming::_simstream;
 std::string measure::_hdr = "USELESS HEADER";

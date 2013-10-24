@@ -50,9 +50,6 @@ simulationParms::simulationParms() :
 	  _prelease("prelease",   "Probability to release replication fork (ignored if 3nd column is present in landscape file)", 0., _parms)
 {}
 
-
-
-
 int simulationParms::_setupWeights(const char *init)
 {
 
@@ -123,6 +120,7 @@ int simulationParms::main ( int argc, char **argv ) {
     M.enable(measure::HYBRIDIZE);
     M.enable(measure::TIMING);
     M.enable(measure::CGHTIMING);
+    M.enable(measure::INITIATIONRATE);
     initDefaultCghNCutoff();
 
 
@@ -151,7 +149,6 @@ int simulationParms::main ( int argc, char **argv ) {
 
     return (EXIT_SUCCESS);
 }
-
 
 
 int main ( int argc, char *argv[] ) {
