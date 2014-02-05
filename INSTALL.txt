@@ -1,0 +1,12 @@
+This software package has been tested on openSuse 12.4, but it should
+compile on most unix variants as well.
+
+To compile from source, enter the source directory, and then
+make dep
+make
+
+the executable is called replicon. A brief description of command line
+arguments is provided in the README.txt file, which also lists
+example input files
+
+
