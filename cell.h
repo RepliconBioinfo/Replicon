@@ -89,15 +89,16 @@ class cell : protected threadVariablesClient
 		vector<replicator *> _idleRep;
 #ifdef MEASURE_REPLICATION_TIMING
 	public:
-		typedef vector<int > tTableType;
+		typedef vector<int> tTableType;
+		typedef vector<double> rTableType;
 		typedef vector<tTableType> tTableSetType;
-		tTableType &replicationTime ( int i )  { return _replicationTime[i];}
-		tTableType &initiationTime  ( int i )  { return _initiationTime[i]; }
-		tTableType &initiationRate  ()         { return _initiationRate;    }
+		tTableType &replicationTime ( int chr )  { return _replicationTime[chr];}
+		tTableType &initiationTime  ( int chr )  { return _initiationTime[chr]; }
+		rTableType &initiationRate  ()           { return _initiationRate;    }
 		static size_t     nInitiationRateBins;
 	private:
 		tTableSetType _replicationTime, _initiationTime;
-		tTableType    _initiationRate;
+		rTableType    _initiationRate;
 #endif
 
 

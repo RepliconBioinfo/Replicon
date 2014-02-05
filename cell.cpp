@@ -25,8 +25,9 @@
 float cell::_penters = 0.01;
 unsigned int    cell::_nchromosomes = 1;
 unsigned int    cell::_nreplicator  = 100;
-size_t cell::nInitiationRateBins = 5000;
-float cell::_induceAttempt = 5;
+size_t cell::nInitiationRateBins = 50;
+//float cell::_induceAttempt = 5.;
+float cell::_induceAttempt = 1;
 cell::pTableSetType cell::_pinitiate;
 cell::pTableSetType cell::_pprogress;
 cell::pTableSetType cell::_prelease;
@@ -120,9 +121,9 @@ void cell::timeStep()
 		}
 	}
 
-	const int attempts = static_cast<int> ( idle * _induceAttempt + 0.5 );
-	int cur = 0;
-	for ( unsigned int i=0; ( i < attempts ) && ( cur < idle-1 ); i++ ) {
+	const size_t attempts = static_cast<size_t> ( idle * _induceAttempt + 0.5 );
+	size_t cur = 0;
+	for ( size_t i=0; ( i < attempts ) && ( cur < idle-1 ); i++ ) {
 		const unsigned int c =  nChromosomes() > 1 ? ranN ( nChromosomes() ) : 0;
 		dna &d = _dna[c];
 		const int l = ranN ( d.length() );

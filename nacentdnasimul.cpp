@@ -115,12 +115,12 @@ int simulationParms::main ( int argc, char **argv ) {
 
 	measure M(0);
 
-    M.enable(measure::INDICES);
-    M.enable(measure::KINETIC);
-    M.enable(measure::HYBRIDIZE);
-    M.enable(measure::TIMING);
+//    M.enable(measure::INDICES);
+ //   M.enable(measure::KINETIC);
+ //   M.enable(measure::HYBRIDIZE);
+ //   M.enable(measure::TIMING);
     M.enable(measure::CGHTIMING);
-    M.enable(measure::INITIATIONRATE);
+ //   M.enable(measure::INITIATIONRATE);
     initDefaultCghNCutoff();
 
 

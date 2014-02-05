@@ -145,18 +145,18 @@ public:
     virtual void measureNonBlocked(void *) {
         const size_t n = cells().size();
         for ( size_t i=0; i < n; i++ ) {
-        	cell::tTableType &rates = cells()[i].initiationRate();
-        	std::transform(rates.begin(), rates.end(), _rates.begin(), _rates.begin(), std::plus<int>());
+        	cell::rTableType &rates = cells()[i].initiationRate();
+        	std::transform(rates.begin(), rates.end(), _rates.begin(), _rates.begin(), std::plus<double>());
         }
         return;
     }
 
     virtual void prepareMulti(void *) {
     	_rates.resize(cell::nInitiationRateBins);
-    	std::fill(_rates.begin(), _rates.end(), 0);
+    	std::fill(_rates.begin(), _rates.end(), 0.);
     }
     virtual void prepareSingle(void *) {
-    	_Grates = new vector<double>(cell::nInitiationRateBins,0);
+    	_Grates = new vector<double>(cell::nInitiationRateBins,0.);
     }
 
     virtual void cleanupSingle(void *) {
@@ -199,7 +199,7 @@ public:
     virtual std::ostream &SIMULATION_STREAM()  { assert(_simstream); return (*_simstream); }
 
   private:
-    cell::tTableType _rates;
+    cell::rTableType _rates;
     static  vector<double>  *_Grates;
     static std::ostream *_simstream;
 };
