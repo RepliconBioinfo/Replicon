@@ -19,7 +19,7 @@
  ***************************************************************************/
 #ifndef SIMULATIONPARMS_H
 #define SIMULATIONPARMS_H
-#include <guli/uiParms.h>
+#include "uiParms.h"
 /**
 A collector class for technical parameters of the simulation
 
@@ -52,10 +52,12 @@ private:
 	string _parmHeader();
 	int _setupWeights(const char *);;
 	GULI::uiParms   _parms;
-	intvarT	        _ntherm, _stepsize, _ncells, _nthread, _nmeas, _nfork;
+	intvarT	         _ncells, _nthread, _nfork;
 	doublevecT      _flowsortparms;
-	touchVarT       _overwrite;
-	doublevarT      _pprogress, _prelease;
+
+	static int _ntherm, _stepsize, _nmeas;
+	static bool _overwrite;
+	static double _pprogress, _prelease;
 };
 
 #endif

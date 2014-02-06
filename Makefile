@@ -18,11 +18,11 @@ LIBS = -lstdc++
 endif
 
 
-CSRC= cell.cpp dna.cpp measurement.cpp nacentdnasimul.cpp threadcontrol.cpp \
+CSRC= cell.cpp dna.cpp measurement.cpp main.cpp threadcontrol.cpp \
  threadvariablesclient.cpp replicator.cpp thread.cpp threadvariables.cpp \
  dataBasic.cc dataIF.cpp dataIO.cc uiParms.cpp gzstream.cc tabDelimited.cc
 
-repliconobj= cell.o dna.o measurement.o nacentdnasimul.o threadcontrol.o \
+repliconobj= cell.o dna.o measurement.o main.o threadcontrol.o \
  threadvariablesclient.o replicator.o thread.o threadvariables.o \
  dataBasic.o dataIF.o dataIO.o uiParms.o gzstream.o tabDelimited.o
 

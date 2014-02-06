@@ -253,14 +253,13 @@ measurement.o: measurement.cpp /usr/include/assert.h \
  /usr/include/bits/huge_vall.h /usr/include/bits/inf.h \
  /usr/include/bits/nan.h /usr/include/bits/mathdef.h \
  /usr/include/bits/mathcalls.h dna.h config.h replicator.h thread.h
-nacentdnasimul.o: nacentdnasimul.cpp /usr/include/math.h \
- /usr/include/features.h /usr/include/sys/cdefs.h \
- /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
- /usr/include/gnu/stubs-64.h /usr/include/bits/huge_val.h \
- /usr/include/bits/huge_valf.h /usr/include/bits/huge_vall.h \
- /usr/include/bits/inf.h /usr/include/bits/nan.h \
- /usr/include/bits/mathdef.h /usr/include/bits/mathcalls.h \
- /usr/include/c++/4.7/functional \
+main.o: main.cpp /usr/include/math.h /usr/include/features.h \
+ /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h \
+ /usr/include/gnu/stubs.h /usr/include/gnu/stubs-64.h \
+ /usr/include/bits/huge_val.h /usr/include/bits/huge_valf.h \
+ /usr/include/bits/huge_vall.h /usr/include/bits/inf.h \
+ /usr/include/bits/nan.h /usr/include/bits/mathdef.h \
+ /usr/include/bits/mathcalls.h /usr/include/c++/4.7/functional \
  /usr/include/c++/4.7/x86_64-suse-linux/bits/c++config.h \
  /usr/include/c++/4.7/x86_64-suse-linux/bits/os_defines.h \
  /usr/include/c++/4.7/x86_64-suse-linux/bits/cpu_defines.h \

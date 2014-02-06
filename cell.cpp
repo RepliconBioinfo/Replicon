@@ -26,7 +26,6 @@ float cell::_penters = 0.01;
 unsigned int    cell::_nchromosomes = 1;
 unsigned int    cell::_nreplicator  = 100;
 size_t cell::nInitiationRateBins = 50;
-//float cell::_induceAttempt = 5.;
 float cell::_induceAttempt = 1;
 cell::pTableSetType cell::_pinitiate;
 cell::pTableSetType cell::_pprogress;

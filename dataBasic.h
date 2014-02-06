@@ -26,7 +26,6 @@
  ***************************************************************************/
 #ifndef ___GULI_DATA_BASIC_H
 #define ___GULI_DATA_BASIC_H
-//#include "guliconfig.h"
 #include "stdinc.h"
 #include "dataIF.h"
 namespace GULI {
