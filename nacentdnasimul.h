@@ -19,7 +19,7 @@
  ***************************************************************************/
 #ifndef SIMULATIONPARMS_H
 #define SIMULATIONPARMS_H
-#include <guli/uiParms.h>
+#include "uiParms.h"
 /**
 A collector class for technical parameters of the simulation
 
@@ -56,6 +56,8 @@ private:
 	doublevecT      _flowsortparms;
 	touchVarT       _overwrite;
 	doublevarT      _pprogress, _prelease;
+	touchVarT       _kinetic, _hybridize, _indices, _timing, _initrate;
 };
+
 
 #endif
