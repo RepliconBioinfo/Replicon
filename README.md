@@ -6,8 +6,8 @@ compile on most unix variants as well. `RepliconWrench`, which automates common 
 Pre-compiled binaries are available in the bin directory.
 
 To compile from source, enter the source directory, and then
-make dep
-make
+`make dep`
+`make`
 
 the executable is called `replicon`. 
 
