@@ -49,7 +49,7 @@ simulationParms::simulationParms() :
 	  _pprogress("pprogress", "Probability to move replication fork (ignored if 2nd column is present in landscape file)", 1., _parms),
 	  _prelease("prelease",   "Probability to release replication fork (ignored if 3nd column is present in landscape file)", 0., _parms),
 	  _kinetic("singlemolecule", "Simulate single molecule experiments", _parms),
-	  _hybridize("nacent", "Simulate nacent strand measurements ala Valenzuela et. al", _parms),
+	  _hybridize("nascent", "Simulate nascent strand measurements ala Valenzuela et. al", _parms),
 	  _indices("indices", "Measure S-phase and replicator engagement fraction", _parms),
 	  _timing("timing", "Perform direct timing measurements", _parms),
 	  _initrate("initrate", "Measure the global initiation rate as a function of S-phase fraction", _parms)
